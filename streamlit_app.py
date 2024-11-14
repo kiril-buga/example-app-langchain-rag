@@ -12,12 +12,16 @@ st.title("LangChain & Streamlit RAG")
 
 def show_ui(qa, prompt_to_user="How may I help you?"):
     if "messages" not in st.session_state.keys():
-        st.session_state.messages = [{"role": "assistant", "content": prompt_to_user}]
+        st.session_state.messages = [{"role": "assistant", "content": prompt_to_user, "feedback": {}}]
 
     # Display chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+            # Display feedback form only for assistant responses
+            if message["role"] == "assistant" and message != st.session_state.messages[0]:
+                display_feedback(message)
+
 
     # User-provided prompt
     if prompt := st.chat_input():
@@ -31,9 +35,94 @@ def show_ui(qa, prompt_to_user="How may I help you?"):
             with st.spinner("Thinking..."):
                 response = st.write_stream(ask_question(qa, prompt))
                 # st.markdown(response)
-        message = {"role": "assistant", "content": response} # response.content
+        message = {"role": "assistant", "content": response, "feedback": {"thumbs": None, "faces": None, "text": None}} # response.content
         st.session_state.messages.append(message)
 
+    # Feedback components
+    # st.session_state.setdefault("thumbs_feedback", None)
+    # st.session_state.setdefault("faces_feedback", None)
+    # st.session_state.setdefault("text_feedback", "")
+    # with st.form(key="feedback_form"):
+    #     st.feedback(options="thumbs", key="thumbs_feedback", on_change=handle_feedback)
+    #     st.feedback(options="faces", key="faces_feedback", on_change=handle_feedback)
+    #     st.text_input(
+    #         label="[Optional] Please provide additional details",
+    #         key="text_feedback",
+    #         on_change=handle_feedback,
+    #     )
+
+def display_feedback(message):
+    if "feedback" not in message:
+        message["feedback"] = {"thumbs": None, "faces": None, "text": None}
+    print(f"message {message}")
+
+    feedback = message["feedback"]
+
+    # Initialize session state for feedback components if they exist in the message
+    if feedback["thumbs"] is not None:
+        st.session_state[f"thumbs_feedback_{id(message)}"] = feedback["thumbs"]
+    if feedback["faces"] is not None:
+        st.session_state[f"faces_feedback_{id(message)}"] = feedback["faces"]
+    if feedback["text"] is not None:
+        st.session_state[f"text_feedback_{id(message)}"] = feedback["text"]
+
+    # Display feedback form with unique keys based on the message's object ID
+    st.feedback(
+        options="thumbs",
+        key=f"thumbs_feedback_{id(message)}",
+        on_change=handle_feedback,
+        args=(message,)
+    )
+    st.feedback(
+        options="faces",
+        key=f"faces_feedback_{id(message)}",
+        on_change=handle_feedback,
+        args=(message,)
+    )
+    st.text_input(
+        label="[Optional] Please provide additional details",
+        key=f"text_feedback_{id(message)}",
+        on_change=handle_feedback,
+        args=(message,)
+    )
+
+    # Display feedback form only for assistant responses
+    # st.session_state.setdefault("thumbs_feedback", None)
+    # st.session_state.setdefault("faces_feedback", None)
+    # st.session_state.setdefault("text_feedback", "")
+    #
+    # st.feedback(options="thumbs", key=f"thumbs_feedback_{len(st.session_state.messages)}",
+    #             on_change=handle_feedback)
+    # st.feedback(options="faces", key=f"faces_feedback_{len(st.session_state.messages)}", on_change=handle_feedback)
+    # st.text_input(
+    #     label="[Optional] Please provide additional details",
+    #     key=f"text_feedback_{len(st.session_state.messages)}",
+    #     on_change=handle_feedback,
+    # )
+
+
+def handle_feedback(message):
+    # Update feedback directly within the message object
+    message["feedback"] = {
+        "thumbs": st.session_state.get(f"thumbs_feedback_{id(message)}"),
+        "faces": st.session_state.get(f"faces_feedback_{id(message)}"),
+        "text": st.session_state.get(f"text_feedback_{id(message)}")
+    }
+    # thumbs = st.session_state.get(f"thumbs_feedback_{index}")
+    # faces = st.session_state.get(f"faces_feedback_{index}")
+    # text = st.session_state.get(f"text_feedback_{index}")
+    #
+    # # Store feedback in the specific message's feedback attribute
+    # st.session_state.messages[index]["feedback"] = {
+    #     "thumbs": thumbs,
+    #     "faces": faces,
+    #     "text": text
+    # }
+    #
+    # # Display feedback as confirmation below the message
+    # st.markdown(f"**Thumbs Feedback:** {thumbs}")
+    # st.markdown(f"**Faces Feedback:** {faces}")
+    # st.markdown(f"**Additional Comments:** {text}")
 
 @st.cache_resource
 def get_retriever(huggingfacehub_api_token=None):
