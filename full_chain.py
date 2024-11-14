@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from langchain.memory import ChatMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate
 
 from basic_chain import get_model
@@ -11,8 +11,8 @@ from memory import create_memory_chain
 from rag_chain import make_rag_chain
 
 
-def create_full_chain(retriever, openai_api_key=None, chat_memory=ChatMessageHistory()):
-    model = get_model("ChatGPT", openai_api_key=openai_api_key)
+def create_full_chain(retriever, huggingfacehub_api_token=None, chat_memory=ChatMessageHistory()):
+    model = get_model("llama-3.1-8b-instant", huggingfacehub_api_token=huggingfacehub_api_token)
     system_prompt = """You are a helpful AI assistant for busy professionals trying to improve their health.
     Use the following context and the users' chat history to help the user:
     If you don't know the answer, just say that you don't know. 
@@ -34,11 +34,11 @@ def create_full_chain(retriever, openai_api_key=None, chat_memory=ChatMessageHis
 
 
 def ask_question(chain, query):
-    response = chain.invoke(
+    for token in chain.stream(
         {"question": query},
         config={"configurable": {"session_id": "foo"}}
-    )
-    return response
+    ):
+        yield token
 
 
 def main():

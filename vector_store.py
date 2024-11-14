@@ -3,7 +3,7 @@ import os
 from typing import List
 
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from local_loader import get_document_text
 from remote_loader import download_file
 from splitter import split_documents
@@ -35,10 +35,10 @@ def create_vector_db(texts, embeddings=None, collection_name="chroma"):
     # Select embeddings
     if not embeddings:
         # To use HuggingFace embeddings instead:
-        # from langchain_community.embeddings import HuggingFaceEmbeddings
-        # embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        openai_api_key = os.environ["OPENAI_API_KEY"]
-        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key, model="text-embedding-3-small")
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        # openai_api_key = os.environ["OPENAI_API_KEY"]
+        # embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key, model="text-embedding-3-small")
 
     proxy_embeddings = EmbeddingProxy(embeddings)
     # Create a vectorstore from documents

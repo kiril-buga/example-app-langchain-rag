@@ -2,9 +2,9 @@ import os
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
-from langchain_community.llms import HuggingFaceHub
-from langchain_community.chat_models.huggingface import ChatHuggingFace
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
 from dotenv import load_dotenv
 
@@ -17,22 +17,29 @@ def get_model(repo_id=ZEPHYR_ID, **kwargs):
     if repo_id == "ChatGPT":
         chat_model = ChatOpenAI(temperature=0, **kwargs)
     else:
-        huggingfacehub_api_token = kwargs.get("HUGGINGFACEHUB_API_TOKEN", None)
-        if not huggingfacehub_api_token:
-            huggingfacehub_api_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN", None)
-        os.environ["HF_TOKEN"] = huggingfacehub_api_token
-
-        llm = HuggingFaceHub(
-            repo_id=repo_id,
-            task="text-generation",
-            model_kwargs={
-                "max_new_tokens": 512,
-                "top_k": 30,
-                "temperature": 0.1,
-                "repetition_penalty": 1.03,
-                "huggingfacehub_api_token": huggingfacehub_api_token,
-            })
-        chat_model = ChatHuggingFace(llm=llm)
+        groq_api_token = kwargs.get("GROQ_API_KEY")
+        chat_model = ChatGroq(
+            model=repo_id,
+            temperature=0,
+            max_tokens=None,
+            timeout=None,
+            max_retries=3,
+        )
+        # huggingfacehub_api_token = kwargs.get("HUGGINGFACEHUB_API_TOKEN", None)
+        # if not huggingfacehub_api_token:
+        #     huggingfacehub_api_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN", None)
+        # os.environ["HF_TOKEN"] = huggingfacehub_api_token
+        #
+        # llm = HuggingFaceEndpoint(
+        #     repo_id=repo_id,
+        #     task="text-generation",
+        #     max_new_tokens=512,
+        #     top_k=30,
+        #     temperature=0.1,
+        #     repetition_penalty=1.03,
+        #     huggingfacehub_api_token=huggingfacehub_api_token,
+        #     )
+        # chat_model = ChatHuggingFace(llm=llm)
     return chat_model
 
 
