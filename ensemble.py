@@ -32,7 +32,7 @@ def main():
     problems_of_philosophy_by_russell = "https://www.gutenberg.org/ebooks/5827.html.images"
     docs = load_web_page(problems_of_philosophy_by_russell)
     ensemble_retriever = ensemble_retriever_from_docs(docs)
-    model = get_model("ChatGPT")
+    model = get_model("llama-3.1-8b-instant")
     chain = make_rag_chain(model, ensemble_retriever) | StrOutputParser()
 
     result = chain.invoke("What are the key problems of philosophy according to Russell?")

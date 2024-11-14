@@ -1,6 +1,7 @@
 from langchain.retrievers.document_compressors import DocumentCompressorPipeline
 from langchain_community.document_transformers import EmbeddingsRedundantFilter, LongContextReorder
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings, HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.retrievers import EnsembleRetriever, ContextualCompressionRetriever, MergerRetriever
 from langchain.chains import RetrievalQA
 

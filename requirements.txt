@@ -16,27 +16,27 @@ numpy
 #openai
 opencv-python
 pandas
-pdf2image
+# pdf2image
 pdfminer.six
-pdfplumber
-pikepdf
+# pdfplumber
+#pikepdf
 pillow
 pillow_heif
 pyarrow
 pydantic
 pypdf
-pypdf2
-pypdfium2
+#pypdf2
+#pypdfium2
 #pytesseract
 python-dotenv
-PyYAML
+# PyYAML
 rank-bm25
 regex
 requests
 rich
 safetensors
 scikit-learn
-scipy
+# scipy
 sentence-transformers
 SQLAlchemy
 streamlit
@@ -48,6 +48,6 @@ toml
 #torchvision
 tqdm
 transformers
-watchdog
-watchfiles
+#watchdog
+#watchfiles
 wikipedia
