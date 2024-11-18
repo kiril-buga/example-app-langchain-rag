@@ -39,7 +39,9 @@ scikit-learn
 # scipy
 sentence-transformers
 SQLAlchemy
+# Streamlit
 streamlit
+streamlit-cookie-controller
 sympy
 tiktoken
 tokenizers
