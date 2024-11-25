@@ -4,23 +4,21 @@ from streamlit_cookies_controller import CookieController
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
+import cookie_history
 from ensemble import ensemble_retriever_from_docs
 from full_chain import create_full_chain, ask_question
 from local_loader import load_txt_files
 
+import feedback
+
 st.set_page_config(page_title="LangChain & Streamlit RAG")
 st.title("LangChain & Streamlit RAG")
-# Initialize the cookie controller
-controller = CookieController()
-# Retrieve chat history from cookies
-chat_history = controller.get('chat_history')
-if chat_history is None:
-    chat_history = []
-
-
+cookie_controller = CookieController()
 def show_ui(qa, prompt_to_user="How may I help you?"):
+    # Initialize the cookie controller
+    cookie_history.load_cookie_chat_history(cookie_controller)
     if "messages" not in st.session_state.keys():
-        st.session_state.messages = [{"role": "assistant", "content": prompt_to_user, "feedback": {}}]
+        st.session_state.messages = [{"role": "assistant", "content": prompt_to_user}]
 
     # Display chat messages
     for message in st.session_state.messages:
@@ -28,7 +26,7 @@ def show_ui(qa, prompt_to_user="How may I help you?"):
             st.write(message["content"])
             # Display feedback form only for assistant responses
             if message["role"] == "assistant" and message != st.session_state.messages[0]:
-                display_feedback(message)
+                feedback.display_feedback(message)
 
     # User-provided prompt
     if prompt := st.chat_input():
@@ -42,66 +40,11 @@ def show_ui(qa, prompt_to_user="How may I help you?"):
             with st.spinner("Thinking..."):
                 response = st.write_stream(ask_question(qa, prompt))
                 # st.markdown(response)
-            message = {"role": "assistant", "content": response,
-                       "feedback": {"thumbs": None, "stars": None, "faces": None, "text": None}}  # response.content
+            message = {"role": "assistant", "content": response}  # response.content
             st.session_state.messages.append(message)
-            display_feedback(message)
+            feedback.display_feedback(message)
             # Update the cookie with the new chat history
-            controller.set('chat_history',  st.session_state.messages)
-
-
-def display_feedback(message):
-    if "feedback" not in message:
-        message["feedback"] = {"thumbs": None, "stars": None, "faces": None, "text": None}
-    print(f"message {message}")
-
-    feedback = message["feedback"]
-    feedback_types = ["thumbs", "stars", "faces", "text"]
-
-    # Initialize session state for feedback components if they exist in the message
-    for feedback_type in feedback_types:
-        key = f"{feedback_type}_feedback_{id(message)}"
-        st.session_state[key] = feedback.get(feedback_type, None)
-        if feedback_type == "text":
-            st.text_input(
-                label="[Optional] Please provide additional details",
-                key=key,
-                on_change=handle_feedback,
-                args=(message,)
-            )
-        else:
-            st.feedback(
-                options=feedback_type,
-                key=key,
-                on_change=handle_feedback,
-                args=(message,)
-            )
-
-    # Display feedback form only for assistant responses
-    # st.session_state.setdefault("thumbs_feedback", None)
-    # st.session_state.setdefault("faces_feedback", None)
-    # st.session_state.setdefault("text_feedback", "")
-    #
-    # st.feedback(options="thumbs", key=f"thumbs_feedback_{len(st.session_state.messages)}",
-    #             on_change=handle_feedback)
-    # st.feedback(options="faces", key=f"faces_feedback_{len(st.session_state.messages)}", on_change=handle_feedback)
-    # st.text_input(
-    #     label="[Optional] Please provide additional details",
-    #     key=f"text_feedback_{len(st.session_state.messages)}",
-    #     on_change=handle_feedback,
-    # )
-
-
-def handle_feedback(message):
-    # Update feedback directly within the message object
-    message["feedback"] = {
-        "thumbs": st.session_state.get(f"thumbs_feedback_{id(message)}"),
-        "stars": st.session_state.get(f"stars_feedback_{id(message)}"),
-        "faces": st.session_state.get(f"faces_feedback_{id(message)}"),
-        "text": st.session_state.get(f"text_feedback_{id(message)}")
-    }
-    return message
-
+            cookie_controller.set('chat_history',  st.session_state.messages)
 
 @st.cache_resource
 def get_retriever(huggingfacehub_api_token=None):
@@ -134,15 +77,6 @@ def get_secret_or_input(secret_key, secret_name, info_link=None):
     return secret_value
 
 
-def load_chat_history():
-    st.write("Cookies: ", chat_history)
-    # Display existing chat messages
-    for message in chat_history:
-        with st.chat_message(message['role']):
-            st.write(message['content'])
-            display_feedback(message)
-
-
 def run():
     ready = True
 
@@ -167,7 +101,6 @@ def run():
     if ready:
         chain = get_chain(groq_api_key=groq_api_key, huggingfacehub_api_token=huggingfacehub_api_token)
         st.subheader("Ask me questions about this week's meal plan")
-        load_chat_history()
         show_ui(chain, "What would you like to know?")
     else:
         st.stop()
