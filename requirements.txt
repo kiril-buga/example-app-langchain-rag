@@ -41,7 +41,7 @@ sentence-transformers
 SQLAlchemy
 # Streamlit
 streamlit
-streamlit-cookie-controller
+streamlit-cookies-controller
 sympy
 tiktoken
 tokenizers
