@@ -1,3 +1,4 @@
+# 🤝 Give this repo a star
 
 # LangChain and Streamlit RAG
 
